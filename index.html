@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Skill Recommendation System</title>
+  <script src="srss/script.js"></script>
+
+  <style>
+    body, html {
+      height: 100%;
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    .container {
+      width: 95%;
+      max-width: 950px;
+      background: white;
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    h2, p {
+      text-align: center;
+    }
+    .skill-entry {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 12px 20px;
+      font-size: 16px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .skills-list, .example-skills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .skill-tag, .example-tag {
+      background: #e0f0ff;
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 14px;
+      position: relative;
+    }
+    .skill-tag span {
+      margin-left: 8px;
+      cursor: pointer;
+      color: red;
+      font-weight: bold;
+    }
+    .example-tag {
+      cursor: pointer;
+      background: #d4edda;
+      border: 1px solid #28a745;
+      transition: background 0.3s;
+    }
+    .example-tag:hover {
+      background: #c3e6cb;
+    }
+    .center-btn {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .results {
+      background: #e9f7ef;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+    .job-card {
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      border-left: 4px solid #28a745;
+    }
+    .job-title {
+      font-weight: bold;
+    }
+    img {
+      max-width: 80%;  /* Adjust the size */
+      max-height: 400px; /* Limit the height */
+      margin-top: 20px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Skill Recommendation System</h2>
+    <p>Enter your skills or click on examples below. We’ll recommend jobs and skills to boost your resume!</p>
+
+    <div class="skill-entry">
+      <input type="text" id="skillInput" placeholder="Enter skills like Python | HTML | Java" />
+      <button onclick="addSkill()">Add Skill</button>
+    </div>
+
+    <div class="skills-list" id="skillsList"></div>
+
+    <p style="font-weight: bold;">Suggested Example Skills (Click to Add):</p>
+    <div class="example-skills" id="exampleSkills"></div>
+
+    <div class="center-btn">
+      <button onclick="getRecommendations()">Get Recommendations</button>
+    </div>
+
+    <!-- Image with adjusted size -->
+    <div><img src="img.png" alt="Skill Recommendation"></div>
+
+    <div id="recommendationResults" class="results" style="display: none;">
+      <h3>Recommended Jobs:</h3>
+      <div id="jobSuggestions"></div>
+      <h3>Suggested Skills to Add:</h3>
+      <ul id="skillSuggestions"></ul>
+    </div>
+  </div>
+
+  <script>
+    const skills = [];
+    const exampleSkills = [
+      'Python', 'C', 'C++', 'Java', 'HTML', 'CSS', 'JavaScript', 'SQL', 'DBMS',
+      'Computer Networks', 'Operating Systems', 'DSA', 'Machine Learning', 'Artificial Intelligence',
+      'AI Tools', 'ChatGPT', 'Prompt Engineering', 'Cloud Computing', 'AWS', 'Azure',
+      'Docker', 'Kubernetes', 'Git', 'GitHub', 'React', 'Node.js', 'MongoDB',
+      'Cybersecurity', 'DevOps', 'Blockchain', 'Flutter', 'Android Development'
+    ];
+
+    const jobMap = {
+      'python': [
+        { title: 'Data Analyst', desc: 'Analyze and interpret complex data.' },
+        { title: 'Backend Developer', desc: 'Build backend logic with Django or Flask.' }
+      ],
+      'java': [
+        { title: 'Android Developer', desc: 'Develop Android applications using Java.' }
+      ],
+      'html': [
+        { title: 'Frontend Developer', desc: 'Create UI using HTML and CSS.' }
+      ],
+      'css': [
+        { title: 'UI Developer', desc: 'Design appealing UIs with responsive layouts.' }
+      ],
+      'javascript': [
+        { title: 'Web Developer', desc: 'Build interactive features using JavaScript.' }
+      ],
+      'react': [
+        { title: 'React Developer', desc: 'Build dynamic interfaces using React.js.' }
+      ],
+      'node.js': [
+        { title: 'Node.js Developer', desc: 'Develop server-side logic with Node.js.' }
+      ],
+      'sql': [
+        { title: 'Data Engineer', desc: 'Work with relational databases and data pipelines.' }
+      ],
+      'cybersecurity': [
+        { title: 'Security Analyst', desc: 'Protect systems from cyber threats.' }
+      ],
+      'cloud computing': [
+        { title: 'Cloud Engineer', desc: 'Deploy and manage cloud solutions.' }
+      ]
+    };
+
+    const skillMap = {
+      'python': ['Flask', 'Django', 'Pandas'],
+      'html': ['CSS', 'JavaScript'],
+      'css': ['Flexbox', 'Grid'],
+      'javascript': ['React', 'Node.js'],
+      'java': ['Spring Boot'],
+      'cloud computing': ['AWS', 'Azure'],
+      'cybersecurity': ['Ethical Hacking', 'Firewalls'],
+      'sql': ['PostgreSQL', 'MySQL']
+    };
+
+    const comboMap = {
+      'python+java': [
+        { title: 'Software Developer', desc: 'Use both Python and Java for scalable applications.' }
+      ],
+      'html+css+javascript': [
+        { title: 'Frontend Developer', desc: 'Build responsive and interactive UIs.' }
+      ],
+      'react+node.js': [
+        { title: 'Full Stack Developer', desc: 'Build full-stack apps using React and Node.js.' }
+      ],
+      'python+sql': [
+        { title: 'Data Engineer', desc: 'Use SQL and Python to build robust data pipelines.' }
+      ],
+      'python+ml+ai': [
+        { title: 'AI/ML Engineer', desc: 'Design and train intelligent models using ML and AI.' }
+      ]
+    };
+
+    function renderExampleSkills() {
+      const container = document.getElementById("exampleSkills");
+      container.innerHTML = exampleSkills.map(skill =>
+        `<div class="example-tag" onclick="appendSkillToInput('${skill}')">${skill}</div>`
+      ).join('');
+    }
+
+    function appendSkillToInput(skill) {
+      const input = document.getElementById("skillInput");
+      const current = input.value.trim();
+      const skillLower = skill.toLowerCase();
+
+      if (!skills.includes(skillLower)) {
+        input.value = current ? `${current} | ${skill}` : skill;
+      }
+    }
+
+    function addSkill() {
+      const input = document.getElementById("skillInput");
+      const entered = input.value.split("|").map(s => s.trim().toLowerCase()).filter(s => s);
+
+      entered.forEach(skill => {
+        if (!skills.includes(skill)) {
+          skills.push(skill);
+        }
+      });
+
+      renderSkills();
+      input.value = "";
+    }
+
+    function renderSkills() {
+      const list = document.getElementById("skillsList");
+      list.innerHTML = skills.map(skill =>
+        `<div class="skill-tag">${skill}<span onclick="removeSkill('${skill}')">×</span></div>`
+      ).join('');
+    }
+
+    function removeSkill(skill) {
+      const index = skills.indexOf(skill);
+      if (index > -1) {
+        skills.splice(index, 1);
+        renderSkills();
+      }
+    }
+
+    function getRecommendations() {
+      const jobsSet = new Map();
+      const skillSuggestions = new Set();
+
+      const userSkillSet = new Set(skills);
+      const sortedSkills = [...userSkillSet].sort();
+
+      // Match individual skills
+      skills.forEach(skill => {
+        if (jobMap[skill]) {
+          jobMap[skill].forEach(job => jobsSet.set(job.title, job.desc));
+        }
+        if (skillMap[skill]) {
+          skillMap[skill].forEach(s => skillSuggestions.add(s));
+        }
+      });
+
+      // Match skill combinations (pairs and triples)
+      for (let i = 0; i < sortedSkills.length; i++) {
+        for (let j = i + 1; j < sortedSkills.length; j++) {
+          const pair = `${sortedSkills[i]}+${sortedSkills[j]}`;
+          if (comboMap[pair]) {
+            comboMap[pair].forEach(job => jobsSet.set(job.title, job.desc));
+          }
+
+          for (let k = j + 1; k < sortedSkills.length; k++) {
+            const triple = `${sortedSkills[i]}+${sortedSkills[j]}+${sortedSkills[k]}`;
+            if (comboMap[triple]) {
+              comboMap[triple].forEach(job => jobsSet.set(job.title, job.desc));
+            }
+          }
+        }
+      }
+
+      const jobHTML = [...jobsSet.entries()].map(([title, desc]) =>
+        `<div class="job-card"><div class="job-title">${title}</div><div>${desc}</div></div>`
+      ).join('');
+
+      const skillsHTML = [...skillSuggestions].map(s => `<li>${s}</li>`).join('');
+
+      document.getElementById("jobSuggestions").innerHTML = jobHTML || "<p>No roles found. Try adding more skills!</p>";
+      document.getElementById("skillSuggestions").innerHTML = skillsHTML || "<p>No additional suggestions.</p>";
+      document.getElementById("recommendationResults").style.display = 'block';
+    }
+
+    // Init
+    renderExampleSkills();
+  </script>
+</body>
+</html>
